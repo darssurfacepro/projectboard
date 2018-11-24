@@ -1,6 +1,5 @@
 package io.agileintelligence.projectboard.web;
 
-
 import io.agileintelligence.projectboard.domain.ProjectTask;
 import io.agileintelligence.projectboard.service.ProjectTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,47 +18,40 @@ import java.util.Map;
 @CrossOrigin
 public class ProjectTaskController {
 
-    @Autowired
-    private ProjectTaskService projectTaskService;
+	@Autowired
+	private ProjectTaskService projectTaskService;
 
-    @PostMapping("")
-    public ResponseEntity<?> addPTToBoard(@Valid @RequestBody ProjectTask projectTask, BindingResult result){
+	@PostMapping("")
+	public ResponseEntity<?> addPTToBoard(@Valid @RequestBody ProjectTask projectTask, BindingResult result) {
 
-        if(result.hasErrors()){
-            Map<String, String> errorMap = new HashMap<>();
+		if (result.hasErrors()) {
+			Map<String, String> errorMap = new HashMap<>();
 
+			for (FieldError error : result.getFieldErrors()) {
+				errorMap.put(error.getField(), error.getDefaultMessage());
+			}
 
+			return new ResponseEntity<Map<String, String>>(errorMap, HttpStatus.BAD_REQUEST);
+		}
 
-            for(FieldError error: result.getFieldErrors()){
-                errorMap.put(error.getField(), error.getDefaultMessage());
-            }
+		ProjectTask newPT = projectTaskService.saveOrUpdateProjectTask(projectTask);
 
-            return new ResponseEntity<Map<String, String>>(errorMap, HttpStatus.BAD_REQUEST);
-        }
+		return new ResponseEntity<ProjectTask>(newPT, HttpStatus.CREATED);
+	}
 
-        ProjectTask newPT = projectTaskService.saveOrUpdateProjectTask(projectTask);
+	@GetMapping("/all")
+	public Iterable<ProjectTask> getAllPTs() {
+		return projectTaskService.findAll();
+	}
 
-        return new ResponseEntity<ProjectTask>(newPT, HttpStatus.CREATED);
-    }
-    
-    @GetMapping("/all")
-    public Iterable<ProjectTask> getAllPTs(){
-    	return projectTaskService.findAll();
-    }
+	@GetMapping("/showAll")
+	public ResponseEntity<?> getAll() {
+		return new ResponseEntity<Iterable<ProjectTask>>(projectTaskService.findAll(), HttpStatus.OK);
+	}
 
-    @GetMapping("/showAll")
-    public ResponseEntity<?> getAll(){
-    	return new ResponseEntity<Iterable<ProjectTask>>(projectTaskService.findAll(), HttpStatus.OK);
-    }
-    
-    @GetMapping("{pt_id}")
-    public ResponseEntity<?> getPTById(@PathVariable Long pt_id){
-    	ProjectTask projectTask = projectTaskService.findById(pt_id);
-    	
-    	if (projectTask == null) {
-    		
-    	}
-    	
-    	return new ResponseEntity<ProjectTask>(projectTask, HttpStatus.OK);
-    }
+	@GetMapping("{pt_id}")
+	public ResponseEntity<?> getPTById(@PathVariable Long pt_id) {
+		ProjectTask projectTask = projectTaskService.findById(pt_id);
+		return new ResponseEntity<ProjectTask>(projectTask, HttpStatus.OK);
+	}
 }
